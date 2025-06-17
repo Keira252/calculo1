@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Resolución de Desigualdades</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    input {
+      width: 50px;
+      text-align: center;
+    }
+    .resultado {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Resolver Desigualdades Lineales y Cuadráticas</h1>
+
+  <h2>Desigualdad Lineal (ax + b < 0)</h2>
+  <form id="linealForm">
+    <label>a: <input type="number" id="a1" required></label> +
+    <label>b: <input type="number" id="b1" required></label>
+    <select id="op1">
+      <option value="<">&lt;</option>
+      <option value="<=">&le;</option>
+      <option value=">">&gt;</option>
+      <option value=">=">&ge;</option>
+    </select> 0
+    <button type="submit">Resolver</button>
+  </form>
+  <div id="resultadoLineal" class="resultado"></div>
+
+  <h2>Desigualdad Cuadrática (ax² + bx + c < 0)</h2>
+  <form id="cuadraticaForm">
+    <label>a: <input type="number" id="a2" required></label> +
+    <label>b: <input type="number" id="b2" required></label> +
+    <label>c: <input type="number" id="c2" required></label>
+    <select id="op2">
+      <option value="<">&lt;</option>
+      <option value="<=">&le;</option>
+      <option value=">">&gt;</option>
+      <option value=">=">&ge;</option>
+    </select> 0
+    <button type="submit">Resolver</button>
+  </form>
+  <div id="resultadoCuadratica" class="resultado"></div>
+
+  <script>
+    document.getElementById("linealForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const a = parseFloat(document.getElementById("a1").value);
+      const b = parseFloat(document.getElementById("b1").value);
+      const op = document.getElementById("op1").value;
+      const x = -b / a;
+
+      let resultado = "";
+      if (a === 0) {
+        resultado = b + " " + op + " 0 → " + eval(b + op + 0);
+      } else {
+        if (a > 0) {
+          resultado = `x ${op === "<" ? "<" : op === "<=" ? "≤" : op === ">" ? ">" : "≥"} ${x}`;
+        } else {
+          // Cambia el signo al invertir desigualdad
+          const opInvertido = { "<": ">", "<=": ">=", ">": "<", ">=": "<=" }[op];
+          resultado = `x ${opInvertido === "<" ? "<" : opInvertido === "<=" ? "≤" : opInvertido === ">" ? ">" : "≥"} ${x}`;
+        }
+      }
+      document.getElementById("resultadoLineal").textContent = resultado;
+    });
+
+    document.getElementById("cuadraticaForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const a = parseFloat(document.getElementById("a2").value);
+      const b = parseFloat(document.getElementById("b2").value);
+      const c = parseFloat(document.getElementById("c2").value);
+      const op = document.getElementById("op2").value;
+
+      let resultado = "";
+
+      if (a === 0) {
+        resultado = "No es una desigualdad cuadrática. a ≠ 0.";
+      } else {
+        const discriminante = b * b - 4 * a * c;
+        if (discriminante < 0) {
+          const signo = a > 0 ? "positivo" : "negativo";
+          const cumple = eval((a > 0 ? "0 " + op + " 0" : "0 " + op + " 0"));
+          resultado = `No hay raíces reales. El trinomio siempre es ${signo}. Entonces: ${cumple ? "Siempre verdadera" : "Nunca verdadera"}`;
+        } else {
+          const x1 = (-b - Math.sqrt(discriminante)) / (2 * a);
+          const x2 = (-b + Math.sqrt(discriminante)) / (2 * a);
+          const menor = Math.min(x1, x2);
+          const mayor = Math.max(x1, x2);
+          if (a > 0) {
+            if (op === "<") resultado = `x ∈ (${menor.toFixed(2)}, ${mayor.toFixed(2)})`;
+            else if (op === "<=") resultado = `x ∈ [${menor.toFixed(2)}, ${mayor.toFixed(2)}]`;
+            else if (op === ">") resultado = `x ∈ (-∞, ${menor.toFixed(2)}) ∪ (${mayor.toFixed(2)}, ∞)`;
+            else if (op === ">=") resultado = `x ∈ (-∞, ${menor.toFixed(2)}] ∪ [${mayor.toFixed(2)}, ∞)`;
+          } else {
+            if (op === "<") resultado = `x ∈ (-∞, ${menor.toFixed(2)}) ∪ (${mayor.toFixed(2)}, ∞)`;
+            else if (op === "<=") resultado = `x ∈ (-∞, ${menor.toFixed(2)}] ∪ [${mayor.toFixed(2)}, ∞)`;
+            else if (op === ">") resultado = `x ∈ (${menor.toFixed(2)}, ${mayor.toFixed(2)})`;
+            else if (op === ">=") resultado = `x ∈ [${menor.toFixed(2)}, ${mayor.toFixed(2)}]`;
+          }
+        }
+      }
+      document.getElementById("resultadoCuadratica").textContent = resultado;
+    });
+  </script>
+</body>
+</html>
