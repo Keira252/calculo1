@@ -2,33 +2,33 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Gráfica, Rango y Dominio</title>
+  <title>Dominio, Rango y Gráfica de una Función</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.6.4/math.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f8fb;
-      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f6fc;
+      padding: 30px;
       text-align: center;
     }
     input, button {
       padding: 10px;
       font-size: 16px;
-      margin: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
+      margin: 10px auto;
       width: 80%;
       max-width: 400px;
+      display: block;
     }
     button {
-      background: #007bff;
+      background-color: #007bff;
       color: white;
-      border: none;
       cursor: pointer;
     }
     button:hover {
-      background: #0056b3;
+      background-color: #0056b3;
     }
     #resultado {
       margin-top: 20px;
@@ -40,69 +40,80 @@
   </style>
 </head>
 <body>
-  <h1>Calculadora de Funciones</h1>
-  <p>Ingresa una función en x (por ejemplo: <code>sin(x)</code>, <code>x^2</code>, <code>1/x</code>):</p>
-  <input type="text" id="funcion" placeholder="Ej: x^2 + 2*x - 1" />
-  <br>
-  <button onclick="graficar()">Graficar</button>
+
+  <h1>Calculadora de Rango, Dominio y Gráfica</h1>
+  <input type="text" id="funcion" placeholder="Escribe una función en x, ejemplo: sin(x), x^2, 1/(x-2)" />
+  <button onclick="procesarFuncion()">Calcular y Graficar</button>
 
   <div id="resultado"></div>
   <div id="grafico"></div>
 
   <script>
-    function graficar() {
-      const expr = document.getElementById("funcion").value;
+    function procesarFuncion() {
+      const expr = document.getElementById("funcion").value.trim();
       const resultado = document.getElementById("resultado");
+      const grafico = document.getElementById("grafico");
+
+      if (!expr) {
+        resultado.innerHTML = "⚠️ Por favor ingresa una función válida.";
+        return;
+      }
 
       let x_vals = [];
       let y_vals = [];
+      let dominio_aprox = [];
+      let y_min = Infinity;
+      let y_max = -Infinity;
 
-      const scope = {};
       const compiled = math.compile(expr);
+      const scope = {};
 
-      // Valores de x de -10 a 10 con paso 0.1
-      for (let x = -10; x <= 10; x += 0.1) {
+      for (let x = -100; x <= 100; x += 0.1) {
         scope.x = x;
         try {
           const y = compiled.evaluate(scope);
-          if (isFinite(y)) {
+          if (typeof y === 'number' && isFinite(y)) {
             x_vals.push(x);
             y_vals.push(y);
+            dominio_aprox.push(x);
+            if (y < y_min) y_min = y;
+            if (y > y_max) y_max = y;
           }
-        } catch (err) {
-          // Saltar valores no definidos
+        } catch {
+          // Saltar valores no válidos
         }
       }
 
       if (x_vals.length === 0) {
-        resultado.innerHTML = "⚠️ No se pudo graficar. Verifica la función.";
+        resultado.innerHTML = "⚠️ No se pudo evaluar la función. Verifica que esté bien escrita.";
         Plotly.purge("grafico");
         return;
       }
 
-      // Rango y dominio aproximados
-      const dominio = `[${x_vals[0].toFixed(2)} , ${x_vals[x_vals.length - 1].toFixed(2)}]`;
-      const rango = `[${Math.min(...y_vals).toFixed(2)} , ${Math.max(...y_vals).toFixed(2)}]`;
+      const dominio = `[${dominio_aprox[0].toFixed(2)}, ${dominio_aprox[dominio_aprox.length - 1].toFixed(2)}]`;
+      const rango = `[${y_min.toFixed(2)}, ${y_max.toFixed(2)}]`;
 
       resultado.innerHTML = `
-        📌 <strong>Dominio aprox.:</strong> ${dominio}<br>
-        📌 <strong>Rango aprox.:</strong> ${rango}
+         <strong>Dominio aprox.:</strong> ${dominio}<br>
+         <strong>Rango aprox.:</strong> ${rango}
       `;
 
       const trace = {
         x: x_vals,
         y: y_vals,
-        type: "scatter",
-        mode: "lines",
-        line: { color: "#007bff" }
+        type: 'scatter',
+        mode: 'lines',
+        line: { color: '#007bff' }
       };
 
-      Plotly.newPlot("grafico", [trace], {
+      Plotly.newPlot('grafico', [trace], {
         title: `y = ${expr}`,
-        xaxis: { title: "x" },
-        yaxis: { title: "y" }
+        xaxis: { title: 'x' },
+        yaxis: { title: 'y' },
+        margin: { t: 40 }
       });
     }
   </script>
+
 </body>
 </html>
