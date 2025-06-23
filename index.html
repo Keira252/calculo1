@@ -2,143 +2,131 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Desigualdades con Gráfico</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.0"></script>
+  <title>Calculadora de Rango y Dominio</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11.11.0/lib/browser/math.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
     }
+
+    h1 {
+      color: #333;
+    }
+
+    .container {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    label, input, button {
+      width: 100%;
+      display: block;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
     input {
-      width: 50px;
-      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
     }
-    canvas {
-      max-width: 600px;
-      margin-top: 30px;
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
     }
-    .resultado {
-      margin-top: 15px;
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .output {
+      margin-top: 20px;
       font-weight: bold;
+    }
+
+    #graph {
+      margin-top: 30px;
     }
   </style>
 </head>
 <body>
+  <h1>Calculadora de Rango y Dominio</h1>
+  <div class="container">
+    <label for="funcion">Escribe una función en x (por ejemplo: sin(x), x^2, 1/x):</label>
+    <input type="text" id="funcion" placeholder="Ej: x^2 + 3">
+    <button onclick="calcular()">Calcular</button>
+    <div class="output" id="resultado"></div>
+    <div id="graph"></div>
+  </div>
 
-<h1>Resolver Desigualdades con Gráfico</h1>
+  <script>
+    function calcular() {
+      const expr = document.getElementById("funcion").value;
+      const resultado = document.getElementById("resultado");
+      const x_vals = [];
+      const y_vals = [];
+      const scope = {};
 
-<h2>Desigualdad Lineal o Cuadrática</h2>
-<form id="form">
-  <label>a: <input type="number" id="a" required></label> +
-  <label>b: <input type="number" id="b" required></label> +
-  <label>c: <input type="number" id="c" value="0" required></label>
-  <select id="op">
-    <option value="<">&lt;</option>
-    <option value="<=">&le;</option>
-    <option value=">">&gt;</option>
-    <option value=">=">&ge;</option>
-  </select> 0
-  <button type="submit">Resolver</button>
-</form>
+      let minX = -10, maxX = 10, step = 0.1;
 
-<div class="resultado" id="resultado"></div>
+      try {
+        const compiled = math.compile(expr);
 
-<canvas id="grafico"></canvas>
-
-<script>
-const ctx = document.getElementById("grafico").getContext("2d");
-let chart;
-
-document.getElementById("form").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const a = parseFloat(document.getElementById("a").value);
-  const b = parseFloat(document.getElementById("b").value);
-  const c = parseFloat(document.getElementById("c").value);
-  const op = document.getElementById("op").value;
-
-  const x = [];
-  const y = [];
-  const xMin = -10, xMax = 10;
-  for (let i = xMin; i <= xMax; i += 0.1) {
-    x.push(i);
-    y.push(a * i * i + b * i + c);
-  }
-
-  // Calcular solución textual
-  let resultado = "";
-  const discrim = b * b - 4 * a * c;
-  if (a === 0) {
-    const xSol = -c / b;
-    const signo = b > 0 ? op : { "<": ">", "<=": ">=", ">": "<", ">=": "<=" }[op];
-    resultado = `x ${signo} ${xSol.toFixed(2)}`;
-  } else if (discrim < 0) {
-    const siempre = a > 0 ? "positivo" : "negativo";
-    const cumple = eval((a > 0 ? "0 " + op + " 0" : "0 " + op + " 0"));
-    resultado = `No hay raíces reales. Siempre ${siempre}. → ${cumple ? "Siempre verdadera" : "Nunca verdadera"}`;
-  } else {
-    const x1 = (-b - Math.sqrt(discrim)) / (2 * a);
-    const x2 = (-b + Math.sqrt(discrim)) / (2 * a);
-    const menor = Math.min(x1, x2);
-    const mayor = Math.max(x1, x2);
-    if (a > 0) {
-      if (op === "<") resultado = `x ∈ (${menor.toFixed(2)}, ${mayor.toFixed(2)})`;
-      if (op === "<=") resultado = `x ∈ [${menor.toFixed(2)}, ${mayor.toFixed(2)}]`;
-      if (op === ">") resultado = `x ∈ (-∞, ${menor.toFixed(2)}) ∪ (${mayor.toFixed(2)}, ∞)`;
-      if (op === ">=") resultado = `x ∈ (-∞, ${menor.toFixed(2)}] ∪ [${mayor.toFixed(2)}, ∞)`;
-    } else {
-      if (op === "<") resultado = `x ∈ (-∞, ${menor.toFixed(2)}) ∪ (${mayor.toFixed(2)}, ∞)`;
-      if (op === "<=") resultado = `x ∈ (-∞, ${menor.toFixed(2)}] ∪ [${mayor.toFixed(2)}, ∞)`;
-      if (op === ">") resultado = `x ∈ (${menor.toFixed(2)}, ${mayor.toFixed(2)})`;
-      if (op === ">=") resultado = `x ∈ [${menor.toFixed(2)}, ${mayor.toFixed(2)}]`;
-    }
-  }
-
-  document.getElementById("resultado").textContent = "Solución: " + resultado;
-
-  // Destruir gráfico anterior si existe
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: x,
-      datasets: [{
-        label: 'f(x) = ax² + bx + c',
-        data: y,
-        borderColor: 'blue',
-        fill: false,
-        pointRadius: 0,
-        borderWidth: 2,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        annotation: {
-          annotations: {
-            zeroLine: {
-              type: 'line',
-              yMin: 0,
-              yMax: 0,
-              borderColor: 'red',
-              borderWidth: 1,
-              label: {
-                enabled: true,
-                content: 'y = 0',
-                position: 'start',
-              }
-            }
+        for (let x = minX; x <= maxX; x += step) {
+          scope.x = x;
+          let y = compiled.evaluate(scope);
+          if (isFinite(y)) {
+            x_vals.push(x);
+            y_vals.push(y);
           }
         }
-      },
-      scales: {
-        x: { title: { display: true, text: 'x' } },
-        y: { title: { display: true, text: 'f(x)' } }
+
+        // Calcular dominio y rango aproximados
+        const dominio = `[${x_vals[0].toFixed(2)} , ${x_vals[x_vals.length - 1].toFixed(2)}]`;
+        const minY = Math.min(...y_vals).toFixed(2);
+        const maxY = Math.max(...y_vals).toFixed(2);
+        const rango = `[${minY} , ${maxY}]`;
+
+        resultado.innerHTML = `
+          <p>📌 <strong>Dominio (aprox.):</strong> ${dominio}</p>
+          <p>📌 <strong>Rango (aprox.):</strong> ${rango}</p>
+        `;
+
+        // Dibujar gráfica
+        const trace = {
+          x: x_vals,
+          y: y_vals,
+          type: 'scatter',
+          mode: 'lines',
+          line: { color: '#007bff' }
+        };
+
+        Plotly.newPlot('graph', [trace], {
+          title: `Gráfica de: y = ${expr}`,
+          xaxis: { title: 'x' },
+          yaxis: { title: 'y' },
+        });
+
+      } catch (err) {
+        resultado.innerHTML = `<p style="color: red;">⚠️ Error en la función: ${err.message}</p>`;
+        document.getElementById("graph").innerHTML = "";
       }
     }
-  });
-});
-</script>
+  </script>
 </body>
 </html>
