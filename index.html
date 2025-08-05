@@ -2,48 +2,56 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Derivadas paso a paso - Forma larga</title>
+  <title>Derivada paso a paso - Forma larga</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!-- AÑADIR PLOTLY -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #eef2f3;
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #acb6e5);
       padding: 40px;
+      margin: 0;
     }
     .contenedor {
-      background-color: #fff;
-      padding: 30px;
-      max-width: 800px;
+      background-color: white;
+      padding: 40px;
+      max-width: 900px;
       margin: auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 20px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
     h1 {
       text-align: center;
       color: #2c3e50;
+      font-size: 32px;
+      margin-bottom: 30px;
     }
     input, button {
       font-size: 18px;
-      padding: 10px;
+      padding: 12px;
       margin: 10px 0;
     }
     input {
       width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
     button {
-      background-color: #3498db;
+      background-color: #2c3e50;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
+      padding: 12px 24px;
     }
     .paso {
-      background-color: #f0f4f8;
-      padding: 15px;
-      border-left: 5px solid #2980b9;
-      margin-top: 15px;
-      border-radius: 6px;
+      background-color: #f8f9fa;
+      border-left: 6px solid #2c3e50;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 10px;
+      font-size: 16px;
     }
     .error {
       color: red;
@@ -51,16 +59,21 @@
     #grafico {
       margin-top: 40px;
     }
+    code {
+      background: #eef;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="contenedor">
     <h1>Derivada por la definición</h1>
-    <p>Escribe la función <strong>f(x)</strong> (ej: <code>x^2 + 3x</code>):</p>
+    <p>Escribe una función <strong>f(x)</strong> (ej: <code>x^2 + 3x</code>):</p>
     <input type="text" id="funcion" placeholder="Ejemplo: x^2 + 3x">
-    <button onclick="calcularDerivada()">Resolver</button>
+    <button onclick="calcularDerivada()">Calcular paso a paso</button>
     <div id="resultado"></div>
-    <div id="grafico"></div> <!-- AÑADIDO -->
+    <div id="grafico"></div>
   </div>
 
   <script>
@@ -80,6 +93,7 @@
         const fx = math.parse(entrada);
         const fx_str = fx.toString();
 
+        // f(x + h)
         const fxh = fx.transform(node =>
           node.isSymbolNode && node.name === "x"
             ? math.parse("(x + h)")
@@ -87,31 +101,33 @@
         );
         const fxh_str = fxh.toString();
 
+        // f(x + h) - f(x)
         const diferencia = math.simplify(`(${fxh_str}) - (${fx_str})`);
         const diferencia_str = diferencia.toString();
 
+        // (f(x+h) - f(x)) / h
         const cociente = math.simplify(`(${diferencia_str}) / h`);
         const cociente_str = cociente.toString();
 
+        // Derivada final
         const derivada = math.derivative(entrada, 'x');
         const derivada_str = derivada.toString();
 
-        resultado.innerHTML += `<div class="paso">1️⃣ Fórmula general:<br>f'(x) = lim₍ₕ→0₎ [f(x+h) - f(x)] / h</div>`;
-        resultado.innerHTML += `<div class="paso">2️⃣ f(x) = <strong>${fx_str}</strong></div>`;
-        resultado.innerHTML += `<div class="paso">3️⃣ f(x+h) = <strong>${fxh_str}</strong></div>`;
-        resultado.innerHTML += `<div class="paso">4️⃣ Diferencia: f(x+h) - f(x) = <strong>${diferencia_str}</strong></div>`;
-        resultado.innerHTML += `<div class="paso">5️⃣ Cociente: [f(x+h) - f(x)] / h = <strong>${cociente_str}</strong></div>`;
-        resultado.innerHTML += `<div class="paso">6️⃣ Derivada (límite cuando h→0): f'(x) = <strong>${derivada_str}</strong> ✅</div>`;
+        // Mostrar paso a paso
+        resultado.innerHTML += `<div class="paso">📘 <strong>1. Definición formal:</strong><br>f'(x) = lim(h → 0) [f(x + h) - f(x)] / h</div>`;
+        resultado.innerHTML += `<div class="paso">✏️ <strong>2. Escribimos f(x):</strong><br>f(x) = <code>${fx_str}</code></div>`;
+        resultado.innerHTML += `<div class="paso">🔁 <strong>3. Calculamos f(x + h):</strong><br>f(x + h) = <code>${fxh_str}</code></div>`;
+        resultado.innerHTML += `<div class="paso">➖ <strong>4. Restamos f(x + h) - f(x):</strong><br><code>${fxh_str} - (${fx_str}) = ${diferencia_str}</code></div>`;
+        resultado.innerHTML += `<div class="paso">➗ <strong>5. Dividimos entre h:</strong><br><code>[${diferencia_str}] / h = ${cociente_str}</code></div>`;
+        resultado.innerHTML += `<div class="paso">📉 <strong>6. Aplicamos el límite:</strong><br>f'(x) = <code>${derivada_str}</code> ✅</div>`;
 
-        // 🔢 Generar datos para graficar
+        // Graficar f(x) y f'(x)
         const f = math.compile(entrada);
         const df = derivada.compile();
-
         const x_vals = math.range(-10, 10, 0.2).toArray();
         const y_vals_f = x_vals.map(x => f.evaluate({ x }));
         const y_vals_df = x_vals.map(x => df.evaluate({ x }));
 
-        // 📈 Gráfico con Plotly
         const trazas = [
           {
             x: x_vals,
@@ -130,7 +146,6 @@
             line: { dash: "dot", width: 3 }
           }
         ];
-
         const layout = {
           title: "Gráfico de f(x) y su derivada f'(x)",
           xaxis: { title: "x" },
@@ -140,9 +155,10 @@
         Plotly.newPlot("grafico", trazas, layout);
 
       } catch (e) {
-        resultado.innerHTML = `<div class="paso error">❌ Error al interpretar la función. Asegúrate de usar solo <strong>x</strong> como variable y una sintaxis válida.</div>`;
+        resultado.innerHTML = `<div class="paso error">❌ Error al interpretar la función. Asegúrate de usar solo <strong>x</strong> y escribir la función correctamente.</div>`;
       }
     }
   </script>
 </body>
 </html>
+
