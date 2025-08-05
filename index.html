@@ -2,118 +2,148 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Dominio, Rango y Gráfica de una Función</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <title>Derivadas paso a paso - Forma larga</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!-- AÑADIR PLOTLY -->
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f2f6fc;
+      font-family: Arial, sans-serif;
+      background-color: #eef2f3;
+      padding: 40px;
+    }
+    .contenedor {
+      background-color: #fff;
       padding: 30px;
+      max-width: 800px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
       text-align: center;
+      color: #2c3e50;
     }
     input, button {
+      font-size: 18px;
       padding: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin: 10px auto;
-      width: 80%;
-      max-width: 400px;
-      display: block;
+      margin: 10px 0;
+    }
+    input {
+      width: 70%;
     }
     button {
-      background-color: #007bff;
+      background-color: #3498db;
       color: white;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #0056b3;
+    .paso {
+      background-color: #f0f4f8;
+      padding: 15px;
+      border-left: 5px solid #2980b9;
+      margin-top: 15px;
+      border-radius: 6px;
     }
-    #resultado {
-      margin-top: 20px;
-      font-weight: bold;
+    .error {
+      color: red;
     }
     #grafico {
-      margin-top: 30px;
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
-
-  <h1>Calculadora de Rango, Dominio y Gráfica</h1>
-  <input type="text" id="funcion" placeholder="Escribe una función en x, ejemplo: sin(x), x^2, 1/(x-2)" />
-  <button onclick="procesarFuncion()">Calcular y Graficar</button>
-
-  <div id="resultado"></div>
-  <div id="grafico"></div>
+  <div class="contenedor">
+    <h1>Derivada por la definición</h1>
+    <p>Escribe la función <strong>f(x)</strong> (ej: <code>x^2 + 3x</code>):</p>
+    <input type="text" id="funcion" placeholder="Ejemplo: x^2 + 3x">
+    <button onclick="calcularDerivada()">Resolver</button>
+    <div id="resultado"></div>
+    <div id="grafico"></div> <!-- AÑADIDO -->
+  </div>
 
   <script>
-    function procesarFuncion() {
-      const expr = document.getElementById("funcion").value.trim();
+    function calcularDerivada() {
+      const entrada = document.getElementById("funcion").value.trim();
       const resultado = document.getElementById("resultado");
       const grafico = document.getElementById("grafico");
+      resultado.innerHTML = "";
+      grafico.innerHTML = "";
 
-      if (!expr) {
-        resultado.innerHTML = "⚠️ Por favor ingresa una función válida.";
+      if (!entrada) {
+        resultado.innerHTML = '<div class="paso error">⚠️ Ingresa una función válida.</div>';
         return;
       }
 
-      let x_vals = [];
-      let y_vals = [];
-      let dominio_aprox = [];
-      let y_min = Infinity;
-      let y_max = -Infinity;
+      try {
+        const fx = math.parse(entrada);
+        const fx_str = fx.toString();
 
-      const compiled = math.compile(expr);
-      const scope = {};
+        const fxh = fx.transform(node =>
+          node.isSymbolNode && node.name === "x"
+            ? math.parse("(x + h)")
+            : node
+        );
+        const fxh_str = fxh.toString();
 
-      for (let x = -100; x <= 100; x += 0.1) {
-        scope.x = x;
-        try {
-          const y = compiled.evaluate(scope);
-          if (typeof y === 'number' && isFinite(y)) {
-            x_vals.push(x);
-            y_vals.push(y);
-            dominio_aprox.push(x);
-            if (y < y_min) y_min = y;
-            if (y > y_max) y_max = y;
+        const diferencia = math.simplify(`(${fxh_str}) - (${fx_str})`);
+        const diferencia_str = diferencia.toString();
+
+        const cociente = math.simplify(`(${diferencia_str}) / h`);
+        const cociente_str = cociente.toString();
+
+        const derivada = math.derivative(entrada, 'x');
+        const derivada_str = derivada.toString();
+
+        resultado.innerHTML += `<div class="paso">1️⃣ Fórmula general:<br>f'(x) = lim₍ₕ→0₎ [f(x+h) - f(x)] / h</div>`;
+        resultado.innerHTML += `<div class="paso">2️⃣ f(x) = <strong>${fx_str}</strong></div>`;
+        resultado.innerHTML += `<div class="paso">3️⃣ f(x+h) = <strong>${fxh_str}</strong></div>`;
+        resultado.innerHTML += `<div class="paso">4️⃣ Diferencia: f(x+h) - f(x) = <strong>${diferencia_str}</strong></div>`;
+        resultado.innerHTML += `<div class="paso">5️⃣ Cociente: [f(x+h) - f(x)] / h = <strong>${cociente_str}</strong></div>`;
+        resultado.innerHTML += `<div class="paso">6️⃣ Derivada (límite cuando h→0): f'(x) = <strong>${derivada_str}</strong> ✅</div>`;
+
+        // 🔢 Generar datos para graficar
+        const f = math.compile(entrada);
+        const df = derivada.compile();
+
+        const x_vals = math.range(-10, 10, 0.2).toArray();
+        const y_vals_f = x_vals.map(x => f.evaluate({ x }));
+        const y_vals_df = x_vals.map(x => df.evaluate({ x }));
+
+        // 📈 Gráfico con Plotly
+        const trazas = [
+          {
+            x: x_vals,
+            y: y_vals_f,
+            type: "scatter",
+            mode: "lines",
+            name: "f(x)",
+            line: { width: 3 }
+          },
+          {
+            x: x_vals,
+            y: y_vals_df,
+            type: "scatter",
+            mode: "lines",
+            name: "f'(x)",
+            line: { dash: "dot", width: 3 }
           }
-        } catch {
-          // Saltar valores no válidos
-        }
+        ];
+
+        const layout = {
+          title: "Gráfico de f(x) y su derivada f'(x)",
+          xaxis: { title: "x" },
+          yaxis: { title: "y" }
+        };
+
+        Plotly.newPlot("grafico", trazas, layout);
+
+      } catch (e) {
+        resultado.innerHTML = `<div class="paso error">❌ Error al interpretar la función. Asegúrate de usar solo <strong>x</strong> como variable y una sintaxis válida.</div>`;
       }
-
-      if (x_vals.length === 0) {
-        resultado.innerHTML = "⚠️ No se pudo evaluar la función. Verifica que esté bien escrita.";
-        Plotly.purge("grafico");
-        return;
-      }
-
-      const dominio = `[${dominio_aprox[0].toFixed(2)}, ${dominio_aprox[dominio_aprox.length - 1].toFixed(2)}]`;
-      const rango = `[${y_min.toFixed(2)}, ${y_max.toFixed(2)}]`;
-
-      resultado.innerHTML = `
-         <strong>Dominio aprox.:</strong> ${dominio}<br>
-         <strong>Rango aprox.:</strong> ${rango}
-      `;
-
-      const trace = {
-        x: x_vals,
-        y: y_vals,
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#007bff' }
-      };
-
-      Plotly.newPlot('grafico', [trace], {
-        title: `y = ${expr}`,
-        xaxis: { title: 'x' },
-        yaxis: { title: 'y' },
-        margin: { t: 40 }
-      });
     }
   </script>
-
 </body>
 </html>
+
