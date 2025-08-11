@@ -1,164 +1,227 @@
-<!DOCTYPE html>
+/mi-chat-gpt
+  ├─ server.js
+  ├─ package.json
+  ├─ .env
+  └─ public/
+      ├─ index.html
+      └─ app.js
+// server.js
+import express from "express";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// seguridad básica
+if (!process.env.OPENAI_API_KEY) {
+  console.error("ERROR: define OPENAI_API_KEY en .env");
+  process.exit(1);
+}
+
+app.use(express.json());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, "public")));
+
+// endpoint proxy para el chat
+app.post("/api/chat", async (req, res) => {
+  try {
+    const userMessages = req.body.messages; // array de {role, content}
+    if (!Array.isArray(userMessages)) {
+      return res.status(400).json({ error: "messages debe ser un arreglo" });
+    }
+
+    // Ejemplo usando Chat Completions (ajusta model si usas otro)
+    const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // o el modelo que prefieras / tengas acceso
+        messages: userMessages,
+        max_tokens: 800,
+        temperature: 0.2
+      }),
+    });
+
+    if (!apiRes.ok) {
+      const text = await apiRes.text();
+      return res.status(apiRes.status).json({ error: text });
+    }
+
+    const data = await apiRes.json();
+    // estructura típica: data.choices[0].message
+    const assistantMessage = data.choices?.[0]?.message ?? { role: "assistant", content: "Sin respuesta" };
+    res.json({ assistant: assistantMessage, raw: data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error en servidor", detail: err.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+});
+<!-- public/index.html -->
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Derivada paso a paso - Forma larga</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.1/math.min.js"></script>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat GPT - Educación Burocrática</title>
   <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(to right, #74ebd5, #acb6e5);
-      padding: 40px;
-      margin: 0;
-    }
-    .contenedor {
-      background-color: white;
-      padding: 40px;
-      max-width: 900px;
-      margin: auto;
-      border-radius: 20px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      font-size: 32px;
-      margin-bottom: 30px;
-    }
-    input, button {
-      font-size: 18px;
-      padding: 12px;
-      margin: 10px 0;
-    }
-    input {
-      width: 70%;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    button {
-      background-color: #2c3e50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      padding: 12px 24px;
-    }
-    .paso {
-      background-color: #f8f9fa;
-      border-left: 6px solid #2c3e50;
-      padding: 20px;
-      margin: 20px 0;
-      border-radius: 10px;
-      font-size: 16px;
-    }
-    .error {
-      color: red;
-    }
-    #grafico {
-      margin-top: 40px;
-    }
-    code {
-      background: #eef;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
+    :root{--bg:#f6f7fb;--card:#fff;--accent:#0b63ff;--muted:#6b7280}
+    body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;display:flex;align-items:center;justify-content:center;height:100vh}
+    .app{width:960px;max-width:96%;background:var(--card);border-radius:12px;box-shadow:0 6px 30px rgba(16,24,40,0.08);overflow:hidden;display:grid;grid-template-columns:320px 1fr}
+    .sidebar{padding:18px;border-right:1px solid #eef2f7;background:linear-gradient(180deg,rgba(11,99,255,0.03),transparent)}
+    .brand{font-weight:700;color:var(--accent);margin-bottom:12px}
+    .preset{background:#f1f5ff;padding:8px;border-radius:8px;margin-bottom:8px;cursor:pointer}
+    .chat{display:flex;flex-direction:column;height:520px}
+    .messages{flex:1;padding:18px;overflow:auto;background:linear-gradient(180deg,#fff, #fbfdff)}
+    .msg{margin-bottom:12px;display:flex;gap:8px}
+    .msg.user{justify-content:flex-end}
+    .bubble{max-width:78%;padding:10px 14px;border-radius:12px;background:#f3f4f6;color:#111}
+    .bubble.assistant{background:#eef2ff}
+    .inputBar{display:flex;padding:12px;border-top:1px solid #eef2f7}
+    textarea{flex:1;border-radius:8px;padding:8px;border:1px solid #e6e9ef;resize:none;height:56px}
+    button{margin-left:8px;padding:10px 14px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+    .hint{font-size:13px;color:var(--muted);margin-top:8px}
+    .small{font-size:13px;color:var(--muted);margin-top:6px}
   </style>
 </head>
 <body>
-  <div class="contenedor">
-    <h1>Derivada por la definición</h1>
-    <p>Escribe una función <strong>f(x)</strong> (ej: <code>x^2 + 3x</code>):</p>
-    <input type="text" id="funcion" placeholder="Ejemplo: x^2 + 3x">
-    <button onclick="calcularDerivada()">Calcular paso a paso</button>
-    <div id="resultado"></div>
-    <div id="grafico"></div>
+  <div class="app" role="application">
+    <div class="sidebar">
+      <div class="brand">EduBuro GPT</div>
+      <div class="small">Selecciona un módulo inicial</div>
+      <div class="preset" data-preset="grado">Trámite: Grado / Título</div>
+      <div class="preset" data-preset="homologacion">Homologación (extranj.)</div>
+      <div class="preset" data-preset="legalizacion">Legalización para exterior</div>
+      <div class="hint">Provee guías paso a paso y checklists para cada trámite</div>
+    </div>
+
+    <div class="chat" aria-live="polite">
+      <div style="padding:12px;border-bottom:1px solid #f1f5f9">
+        <strong>Asistente de trámites</strong>
+        <div class="small">Describe tu caso o selecciona un módulo.</div>
+      </div>
+
+      <div class="messages" id="messages" role="log" aria-atomic="false"></div>
+
+      <div class="inputBar">
+        <textarea id="input" placeholder="Escribe tu pregunta sobre trámites (ej: '¿Qué necesito para legalizar mi acta de grado?')"></textarea>
+        <button id="sendBtn">Enviar</button>
+      </div>
+    </div>
   </div>
 
-  <script>
-    function calcularDerivada() {
-      const entrada = document.getElementById("funcion").value.trim();
-      const resultado = document.getElementById("resultado");
-      const grafico = document.getElementById("grafico");
-      resultado.innerHTML = "";
-      grafico.innerHTML = "";
-
-      if (!entrada) {
-        resultado.innerHTML = '<div class="paso error">⚠️ Ingresa una función válida.</div>';
-        return;
-      }
-
-      try {
-        const fx = math.parse(entrada);
-        const fx_str = fx.toString();
-
-        // f(x + h)
-        const fxh = fx.transform(node =>
-          node.isSymbolNode && node.name === "x"
-            ? math.parse("(x + h)")
-            : node
-        );
-        const fxh_str = fxh.toString();
-
-        // f(x + h) - f(x)
-        const diferencia = math.simplify(`(${fxh_str}) - (${fx_str})`);
-        const diferencia_str = diferencia.toString();
-
-        // (f(x+h) - f(x)) / h
-        const cociente = math.simplify(`(${diferencia_str}) / h`);
-        const cociente_str = cociente.toString();
-
-        // Derivada final
-        const derivada = math.derivative(entrada, 'x');
-        const derivada_str = derivada.toString();
-
-        // Mostrar paso a paso
-        resultado.innerHTML += `<div class="paso">📘 <strong>1. Definición formal:</strong><br>f'(x) = lim(h → 0) [f(x + h) - f(x)] / h</div>`;
-        resultado.innerHTML += `<div class="paso">✏️ <strong>2. Escribimos f(x):</strong><br>f(x) = <code>${fx_str}</code></div>`;
-        resultado.innerHTML += `<div class="paso">🔁 <strong>3. Calculamos f(x + h):</strong><br>f(x + h) = <code>${fxh_str}</code></div>`;
-        resultado.innerHTML += `<div class="paso">➖ <strong>4. Restamos f(x + h) - f(x):</strong><br><code>${fxh_str} - (${fx_str}) = ${diferencia_str}</code></div>`;
-        resultado.innerHTML += `<div class="paso">➗ <strong>5. Dividimos entre h:</strong><br><code>[${diferencia_str}] / h = ${cociente_str}</code></div>`;
-        resultado.innerHTML += `<div class="paso">📉 <strong>6. Aplicamos el límite:</strong><br>f'(x) = <code>${derivada_str}</code> ✅</div>`;
-
-        // Graficar f(x) y f'(x)
-        const f = math.compile(entrada);
-        const df = derivada.compile();
-        const x_vals = math.range(-10, 10, 0.2).toArray();
-        const y_vals_f = x_vals.map(x => f.evaluate({ x }));
-        const y_vals_df = x_vals.map(x => df.evaluate({ x }));
-
-        const trazas = [
-          {
-            x: x_vals,
-            y: y_vals_f,
-            type: "scatter",
-            mode: "lines",
-            name: "f(x)",
-            line: { width: 3 }
-          },
-          {
-            x: x_vals,
-            y: y_vals_df,
-            type: "scatter",
-            mode: "lines",
-            name: "f'(x)",
-            line: { dash: "dot", width: 3 }
-          }
-        ];
-        const layout = {
-          title: "Gráfico de f(x) y su derivada f'(x)",
-          xaxis: { title: "x" },
-          yaxis: { title: "y" }
-        };
-
-        Plotly.newPlot("grafico", trazas, layout);
-
-      } catch (e) {
-        resultado.innerHTML = `<div class="paso error">❌ Error al interpretar la función. Asegúrate de usar solo <strong>x</strong> y escribir la función correctamente.</div>`;
-      }
-    }
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
+// public/app.js
+const messagesEl = document.getElementById("messages");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+const presets = document.querySelectorAll(".preset");
+
+let conversation = [
+  {
+    role: "system",
+    content: "Eres un asistente que explica, paso a paso y con lenguaje claro, procesos burocráticos del Ministerio de Educación de Ecuador. Provee checklists, errores comunes y pasos en línea/presencial."
+  }
+];
+
+function appendMessage(role, text) {
+  const wrapper = document.createElement("div");
+  wrapper.className = `msg ${role === "user" ? "user" : ""}`;
+  const bubble = document.createElement("div");
+  bubble.className = "bubble " + (role === "assistant" ? "assistant" : "");
+  bubble.innerText = text;
+  wrapper.appendChild(bubble);
+  messagesEl.appendChild(wrapper);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+async function sendMessage() {
+  const txt = input.value.trim();
+  if (!txt) return;
+  // mostrar mensaje de usuario
+  appendMessage("user", txt);
+  conversation.push({ role: "user", content: txt });
+  input.value = "";
+  sendBtn.disabled = true;
+  sendBtn.innerText = "Pensando...";
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: conversation })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Error desconocido" }));
+      appendMessage("assistant", "Error al comunicarse con el servidor: " + (err.error || JSON.stringify(err)));
+      console.error(err);
+    } else {
+      const data = await res.json();
+      const assistant = data.assistant;
+      const text = assistant?.content ?? JSON.stringify(data.raw ?? data);
+      appendMessage("assistant", text);
+      conversation.push({ role: "assistant", content: text });
+    }
+  } catch (err) {
+    console.error(err);
+    appendMessage("assistant", "Error de red: " + err.message);
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.innerText = "Enviar";
+  }
+}
+
+sendBtn.addEventListener("click", sendMessage);
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// presets
+presets.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const p = btn.getAttribute("data-preset");
+    let userPrompt = "";
+    if (p === "grado") {
+      userPrompt = `Quiero hacer el trámite de grado/título: dime paso a paso, documentos, dónde consultar en línea, y errores comunes.`;
+    } else if (p === "homologacion") {
+      userPrompt = `Cómo homologar un título de bachiller obtenido en el exterior: pasos en línea, documentos, tiempos, y costos.`;
+    } else if (p === "legalizacion") {
+      userPrompt = `Necesito legalizar documentos para el exterior: qué documentos llevar, dónde hacerlo y tiempo estimado.`;
+    }
+    input.value = userPrompt;
+    input.focus();
+  });
+});
+OPENAI_API_KEY=sk-XXXXXXX    # tu clave real (no la subas a repos públicos)
+PORT=3000
+{
+  "name": "mi-chat-gpt",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "node-fetch": "^3.4.0"
+  }
+}
 
