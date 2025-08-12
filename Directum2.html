@@ -1,46 +1,4 @@
-# Directum — Proyecto completo (Archivos)
 
-Este documento contiene **todos los archivos** listos para subir a GitHub (o ejecutar en local). He incluido: `index.html`, `style.css`, `script.js`, `server.js` (proxy recomendado), y `README.md`. Abre el archivo y copia cada sección a su respectivo archivo en tu repo.
-
----
-
-## 1) README.md
-
-```
-# Directum
-
-Directum es una web educativa sobre trámites de grados y títulos en Ecuador. Incluye un chatbot integrado que puede conectarse a la API de OpenAI para responder preguntas sobre procesos de bachillerato y educación superior.
-
-## Estructura del repo
-
-- index.html         -> Interfaz de usuario (HTML)
-- style.css          -> Estilos
-- script.js          -> Lógica del frontend (chat, UI, interacción)
-- server.js          -> (Opcional) proxy Node/Express para manejar la API Key de OpenAI de forma segura
-- LICENSE
-- README.md
-
-## Cómo usar
-
-### Opción A — Desarrollo local con proxy (recomendado)
-1. Clona el repo.
-2. Copia `server.example.env` a `.env` y añade `OPENAI_API_KEY=tu_api_key_aqui`.
-3. Ejecuta `npm install` y luego `node server.js`.
-4. Abre `index.html` en tu navegador y el chat enviará peticiones a `http://localhost:3000/api/chat`.
-
-### Opción B — Usar directamente en cliente (NO recomendado para producción)
-- Puedes pegar tu `OPENAI_API_KEY` en la caja que aparece en la interfaz para pruebas rápidas. Ten en cuenta que exponer la clave en el navegador es inseguro.
-
-## Notas
-- Actualiza los enlaces oficiales en `script.js` (const `FUENTES_OFICIALES`).
-- Personaliza el logo SVG en `index.html` si lo deseas.
-```
-
----
-
-## 2) index.html
-
-```html
 <!doctype html>
 <html lang="es">
 <head>
