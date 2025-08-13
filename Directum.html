@@ -5,184 +5,111 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Directum — Guía de Grados (Ecuador)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
-  <div class="max-w-5xl mx-auto p-6">
-    <header class="flex items-center gap-4">
-      <div class="bg-white p-3 rounded-2xl shadow-md flex items-center gap-3">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 7h18M6 21V7" stroke="#111827" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 21h6" stroke="#111827" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <h1 class="text-xl font-semibold">Directum</h1>
-          <p class="text-sm text-gray-500">Conoce tus derechos — Guía práctica de trámites de grados</p>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <!-- Logo SVG integrado -->
+      <svg id="logo" width="56" height="56" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect rx="18" width="100" height="100" fill="#0f172a"></rect>
+        <g transform="translate(16,18) scale(0.7)" fill="#fff">
+          <path d="M10 5 L30 5 L40 20 L30 35 L10 35 L0 20 Z" fill="#60a5fa"></path>
+          <text x="50" y="28" font-family="Arial, sans-serif" font-size="28" fill="#fff" font-weight="700">D</text>
+        </g>
+      </svg>
+      <div class="brand-text">
+        <h1>Directum</h1>
+        <p class="tag">Conoce tus derechos — Trámites de grados</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="btnSources" class="btn ghost">Fuentes</button>
+      <button id="btnApiKey" class="btn ghost">Configurar API Key</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <aside class="left">
+      <section class="card">
+        <h2>Buscar FAQ</h2>
+        <input id="search" placeholder="Ej: ¿Cómo registro mi título?" />
+      </section>
+
+      <section class="card">
+        <h2>Simular expediente</h2>
+        <select id="tipoTitulo">
+          <option value="bachiller">Bachillerato</option>
+          <option value="nacional">Título nacional</option>
+          <option value="extranjero">Título extranjero</option>
+        </select>
+        <input id="institucion" placeholder="Institución (opcional)" />
+        <div class="row">
+          <button id="simularBtn" class="btn primary">Generar checklist</button>
+          <button id="descargarPlantillaBtn" class="btn">Plantilla</button>
+        </div>
+      </section>
+
+      <section class="card small">
+        <h3>Advertencias</h3>
+        <ul>
+          <li>No uses intermediarios no oficiales.</li>
+          <li>Verifica enlaces oficiales antes de pagar.</li>
+          <li>Conserva comprobantes y copias.</li>
+        </ul>
+      </section>
+
+      <section class="card small">
+        <h3>Línea de tiempo</h3>
+        <div class="timeline">
+          <div class="step"><strong>Solicitud</strong><span>1-2 semanas</span></div>
+          <div class="step"><strong>Validación</strong><span>2-6 semanas</span></div>
+          <div class="step"><strong>Entrega</strong><span>1-2 semanas</span></div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="main">
+      <div class="card">
+        <h2>Preguntas frecuentes</h2>
+        <div id="faqList"></div>
+      </div>
+
+      <div class="card chat-panel">
+        <div class="chat-header">
+          <h3>Chatbot Directum</h3>
+          <div class="chat-meta">Tono: claro · Fuentes oficiales</div>
+        </div>
+        <div id="messages" class="messages"></div>
+
+        <div class="chat-controls">
+          <textarea id="prompt" placeholder="Escribe tu pregunta sobre grados... (p. ej.: ¿Qué documentos necesito para registrar mi título?)"></textarea>
+          <div class="row">
+            <button id="send" class="btn primary">Enviar</button>
+            <button id="exampleBtn" class="btn ghost">Ejemplo</button>
+          </div>
         </div>
       </div>
-      <div class="ml-auto text-sm text-gray-500">Versión: simple · Diseño moderno</div>
-    </header>
 
-    <main class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-      <section class="md:col-span-1 bg-white p-4 rounded-2xl shadow-md">
-        <label class="block text-sm font-medium text-gray-700">Buscar FAQ</label>
-        <input id="search" type="search" placeholder="Ej: ¿Cómo registro mi título?" class="mt-2 w-full p-2 border rounded-lg focus:outline-none" />
+    </section>
+  </main>
 
-        <hr class="my-4" />
+  <footer class="footer">
+    <div>Directum — Proyecto educativo. Actualiza las fuentes oficiales en la configuración.</div>
+  </footer>
 
-        <label class="block text-sm font-medium text-gray-700">Simular expediente</label>
-        <form id="simForm" class="mt-2 space-y-2">
-          <select id="tipoTitulo" class="w-full p-2 border rounded-lg">
-            <option value="bachiller">Bachillerato (secundaria)</option>
-            <option value="nacional">Título universitario nacional</option>
-            <option value="extranjero">Título universitario extranjero</option>
-          </select>
-          <input id="institucion" placeholder="Institución (opcional)" class="w-full p-2 border rounded-lg" />
-          <div class="flex gap-2">
-            <button type="button" id="simularBtn" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white">Generar checklist</button>
-            <button type="button" id="descargarPlantillaBtn" class="py-2 px-3 rounded-lg border">Descargar plantilla</button>
-          </div>
-        </form>
-
-        <hr class="my-4" />
-
-        <div class="text-sm text-gray-600">
-          <strong>Advertencias:</strong>
-          <ul class="list-disc ml-4 mt-2">
-            <li>No uses intermediarios no oficiales.</li>
-            <li>Verifica los enlaces oficiales antes de pagar.</li>
-            <li>Conserva comprobantes y copias.</li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="md:col-span-2 bg-white p-4 rounded-2xl shadow-md">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold">Preguntas frecuentes — Grados y títulos</h2>
-          <div class="text-sm text-gray-500">Última revisión: <span id="fechaRevision"></span></div>
-        </div>
-
-        <div id="faqList" class="mt-4 space-y-3 max-h-[56vh] overflow-auto scrollbar-hide pr-2"></div>
-
-        <hr class="my-4" />
-
-        <div id="respuestaPersonalizada" class="hidden p-4 bg-gray-50 rounded-lg border"></div>
-
-      </section>
-    </main>
-
-    <footer class="mt-6 text-center text-sm text-gray-500">
-      <p>Directum — Conoce tus derechos. Actualiza las fuentes oficiales si publicas en GitHub.</p>
-    </footer>
+  <div id="modalApiKey" class="modal hidden">
+    <div class="modal-content">
+      <h3>Configurar API Key (solo para pruebas)</h3>
+      <p>Se recomienda usar un proxy (server.js). Si usas la clave en el navegador, será visible.</p>
+      <input id="apiKeyInput" placeholder="sk-..." />
+      <div class="row">
+        <button id="saveKey" class="btn primary">Guardar</button>
+        <button id="closeKey" class="btn ghost">Cerrar</button>
+      </div>
+    </div>
   </div>
 
-  <script>
-    const FUENTES_OFICIALES = [
-      {nombre: 'Ministerio de Educación (Trámites)', url: '#'},
-      {nombre: 'SENESCYT (Registro de títulos)', url: '#'},
-      {nombre: 'Consejo de Educación Superior (Reglamentos)', url: '#'}
-    ];
-
-    document.getElementById('fechaRevision').textContent = new Date().toLocaleDateString('es-EC');
-
-    const FAQS = [
-      {
-        categoria: 'Bachillerato',
-        pregunta: '¿Cómo obtengo mi título de bachiller en Ecuador?',
-        respuesta: `1. Solicitar constancia de notas en tu institución educativa.\n2. Presentar documentos en la Dirección Distrital o Ministerio.\n3. Pagar tasas si aplica y retirar el título en la fecha indicada.\nTiempo: 2-8 semanas.`
-      },
-      {
-        categoria: 'Bachillerato',
-        pregunta: '¿Qué NO debo solicitar o pagar?',
-        respuesta: `No uses intermediarios no oficiales ni pagues en sitios no verificados. Conserva siempre comprobantes.`
-      },
-      {
-        categoria: 'Educación Superior',
-        pregunta: '¿Cómo registro un título universitario nacional?',
-        respuesta: `1. Copia del título y acta de grado.\n2. Presentar en Secretaría de la institución para trámite de registro.\n3. Registro en SENESCYT si corresponde.\nTiempo: 4-12 semanas.`
-      },
-      {
-        categoria: 'Educación Superior',
-        pregunta: '¿Cómo convalidar un título extranjero?',
-        respuesta: `1. Apostillar o legalizar el título en el país emisor.\n2. Traducción oficial si no está en español.\n3. Presentar solicitud de reconocimiento o convalidación a SENESCYT u organismo competente.\n4. Adjuntar plan de estudios, certificaciones, etc.\nTiempo: variable (meses).`
-      }
-    ];
-
-    const faqList = document.getElementById('faqList');
-    function renderFaqs(list){
-      faqList.innerHTML = '';
-      list.forEach((f, idx) =>{
-        const card = document.createElement('div');
-        card.className = 'p-3 border rounded-lg bg-white';
-        card.innerHTML = `
-          <div class="flex justify-between items-start"> 
-            <div>
-              <div class="text-sm text-indigo-600 font-medium">${f.categoria}</div>
-              <div class="mt-1 font-semibold">${f.pregunta}</div>
-            </div>
-            <button data-idx="${idx}" class="ml-4 text-sm text-indigo-600 hover:underline">Ver</button>
-          </div>
-        `;
-        faqList.appendChild(card);
-      });
-    }
-    renderFaqs(FAQS);
-
-    faqList.addEventListener('click', (e)=>{
-      const btn = e.target.closest('button[data-idx]');
-      if(!btn) return;
-      const idx = Number(btn.dataset.idx);
-      mostrarRespuesta(FAQS[idx]);
-    });
-
-    function mostrarRespuesta(item){
-      const box = document.getElementById('respuestaPersonalizada');
-      box.classList.remove('hidden');
-      box.innerHTML = `
-        <div class="flex justify-between items-start"> 
-          <div>
-            <div class="text-sm text-indigo-600 font-medium">${item.categoria}</div>
-            <h3 class="mt-1 text-lg font-semibold">${item.pregunta}</h3>
-          </div>
-          <div class="text-sm text-gray-500">Fuentes oficiales</div>
-        </div>
-        <div class="mt-3 whitespace-pre-line text-gray-700">${item.respuesta}</div>
-      `;
-    }
-
-    document.getElementById('search').addEventListener('input', (e)=>{
-      const q = e.target.value.trim().toLowerCase();
-      if(!q) return renderFaqs(FAQS);
-      renderFaqs(FAQS.filter(f=> (f.pregunta + f.respuesta + f.categoria).toLowerCase().includes(q)));
-    });
-
-    document.getElementById('simularBtn').addEventListener('click', ()=>{
-      const tipo = document.getElementById('tipoTitulo').value;
-      let texto = '';
-      if(tipo === 'bachiller'){
-        texto = `Checklist — Bachillerato:\n- Copia de cédula\n- Certificado de notas\n- Solicitud a Dirección Distrital\n- Comprobante de pago (si aplica)\nTiempo: 2-8 semanas`;
-      } else if(tipo === 'nacional'){
-        texto = `Checklist — Título universitario nacional:\n- Copia del título y acta de grado\n- Cédula\n- Plan de estudios (si se requiere)\nTiempo: 4-12 semanas`;
-      } else {
-        texto = `Checklist — Título extranjero:\n- Título apostillado/legalizado\n- Traducción oficial (si aplica)\n- Certificado de notas y plan de estudios\n- Formulario de convalidación\nTiempo: meses`;
-      }
-      const display = document.getElementById('respuestaPersonalizada');
-      display.classList.remove('hidden');
-      display.innerHTML = `<h3 class="text-lg font-semibold">Checklist generado</h3><div class="mt-3 whitespace-pre-line">${texto}</div>`;
-    });
-
-    document.getElementById('descargarPlantillaBtn').addEventListener('click', ()=>{
-      const plantilla = `Ciudad, fecha\n\nSeñores: [Nombre de la institución]\nAsunto: Solicitud de trámite de título/grado\n\nYo, [Nombre completo], con identificación [número], solicito iniciar el trámite para la emisión/registro de mi título de [título].\n\nAtentamente,\n[Firma]`;
-      const blob = new Blob([plantilla], {type: 'text/plain;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'plantilla_solicitud.txt';
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
