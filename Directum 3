@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Directum - Corrupción en Obras Públicas</title>
+  <style>
+    /* Estilos generales */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #1a1a1a;
+    }
+
+    header {
+      background-color: #1a2a4a; /* azul marino */
+      color: #ffffff;
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+    }
+
+    header span.logo {
+      color: #00aaff;
+      font-size: 32px;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h2 {
+      color: #1a2a4a;
+    }
+
+    /* Chatbot */
+    .chat-container {
+      border: 2px solid #1a2a4a;
+      border-radius: 10px;
+      padding: 20px;
+      background-color: #ffffff;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    .chat-log {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #e6f0ff;
+      border-radius: 5px;
+    }
+
+    .chat-log p {
+      margin: 5px 0;
+    }
+
+    .user-msg {
+      color: #1a2a4a;
+      font-weight: bold;
+    }
+
+    .bot-msg {
+      color: #0077cc;
+    }
+
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      background-color: #0077cc;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    footer {
+      text-align: center;
+      margin: 20px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo">Directum</span>
+    <div>Chat sobre corrupción en contratación de obras públicas (MTOP)</div>
+  </header>
+
+  <main>
+    <h2>Bienvenido al Chat de Directum</h2>
+    <p>Puedes preguntar sobre las denuncias más comunes de corrupción en la contratación de obras públicas en Ecuador.</p>
+
+    <div class="chat-container">
+      <div id="chatLog" class="chat-log"></div>
+      <input type="text" id="userInput" placeholder="Escribe tu pregunta aquí...">
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 Directum - Educación y transparencia ciudadana
+  </footer>
+
+  <script>
+    const chatLog = document.getElementById("chatLog");
+    const userInput = document.getElementById("userInput");
+
+    const respuestas = [
+      {
+        trigger: "sobornos",
+        response: "Los sobornos son pagos ilegales que empresas constructoras ofrecen a funcionarios para obtener contratos o agilizar pagos en obras públicas."
+      },
+      {
+        trigger: "sobreprecios",
+        response: "El sobreprecio ocurre cuando se adjudican obras a costos superiores a los reales, afectando el presupuesto del Estado."
+      },
+      {
+        trigger: "documentos falsos",
+        response: "La falsificación de documentos consiste en presentar información falsa para cumplir con requisitos técnicos o financieros en contratos."
+      },
+      {
+        trigger: "adjudicación directa",
+        response: "La adjudicación directa es cuando se otorga un contrato sin proceso competitivo, lo cual facilita corrupción y favoritismos."
+      },
+      {
+        trigger: "nepotismo",
+        response: "El nepotismo en obras públicas ocurre cuando contratos se asignan a empresas vinculadas a familiares o amigos de funcionarios."
+      },
+      {
+        trigger: "educación",
+        response: "La ciudadanía puede prevenir corrupción denunciando irregularidades, participando en veedurías, exigiendo transparencia y promoviendo la ética pública."
+      }
+    ];
+
+    function sendMessage() {
+      const userText = userInput.value.trim();
+      if (!userText) return;
+
+      // Mostrar mensaje del usuario
+      const userMsg = document.createElement("p");
+      userMsg.classList.add("user-msg");
+      userMsg.textContent = "Tú: " + userText;
+      chatLog.appendChild(userMsg);
+
+      // Buscar respuesta
+      let respuestaEncontrada = false;
+      for (const r of respuestas) {
+        if (userText.toLowerCase().includes(r.trigger)) {
+          const botMsg = document.createElement("p");
+          botMsg.classList.add("bot-msg");
+          botMsg.textContent = "Directum: " + r.response;
+          chatLog.appendChild(botMsg);
+          respuestaEncontrada = true;
+          break;
+        }
+      }
+
+      if (!respuestaEncontrada) {
+        const botMsg = document.createElement("p");
+        botMsg.classList.add("bot-msg");
+        botMsg.textContent = "Directum: Lo siento, no tengo información sobre eso. Puedes preguntar sobre sobornos, sobreprecios, documentos falsos, adjudicación directa, nepotismo o educación ciudadana.";
+        chatLog.appendChild(botMsg);
+      }
+
+      // Limpiar input
+      userInput.value = "";
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    // Permitir presionar Enter
+    userInput.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
